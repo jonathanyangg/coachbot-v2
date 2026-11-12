@@ -1,0 +1,10 @@
+[project]
+name = "coachbot_api"
+version = "0.0.1"
+dependencies = ["pyzmq", "msgpack"]
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["coachbot_api*"]
