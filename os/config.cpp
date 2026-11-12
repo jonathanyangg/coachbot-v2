@@ -74,6 +74,7 @@ bool apply_key(Config& cfg, const std::string& key, const std::string& value, st
   if (key == "led_r") return need_int(cfg.led.r);
   if (key == "led_g") return need_int(cfg.led.g);
   if (key == "led_b") return need_int(cfg.led.b);
+  if (key == "button_pin") return need_int(cfg.button_pin);
   if (key == "gpio") {
     if (value != "auto" && value != "memory" && value != "pi") {
       err = "gpio must be auto, memory, or pi";

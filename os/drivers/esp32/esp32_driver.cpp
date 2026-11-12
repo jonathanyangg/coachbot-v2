@@ -9,6 +9,5 @@ void esp32_warn_stub() {
       stderr);
 }
 
-bool esp32_button_available() { return false; }
 bool esp32_tof_available() { return false; }
 bool esp32_battery_available() { return false; }

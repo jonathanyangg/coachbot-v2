@@ -107,6 +107,17 @@ Dispatcher::Dispatcher(Config cfg)
     std::cerr << "motors: pins unset; setVel is accepted and no GPIO is driven\n";
   }
 #endif
+  if (cfg_.button_pin >= 0) {
+    try {
+      gpio_->set_input_pull_down(cfg_.button_pin);
+      button_ready_ = true;
+      std::cerr << "button: BCM " << cfg_.button_pin << " input, pull-down, active-high\n";
+    } catch (const std::exception& exc) {
+      std::cerr << "button: BCM " << cfg_.button_pin << " unavailable: " << exc.what() << "\n";
+    }
+  } else {
+    std::cerr << "button: button_pin unset; isButtonPressed is unavailable\n";
+  }
   if (led_.ready()) {
     std::cerr << "led: BCM r=" << cfg_.led.r << " g=" << cfg_.led.g << " b=" << cfg_.led.b
               << " at " << cfg_.led_hz << " Hz\n";
@@ -278,11 +289,16 @@ void Dispatcher::handle(const msgpack::object& request, msgpack::sbuffer& out, d
   }
 
   if (op == "isButtonPressed") {
-    if (!esp32_button_available()) {
-      fail("unavailable: button is not wired");
+    // S1 pulls GPIO27 to 3.3V when pressed. High means pressed.
+    if (!button_ready_) {
+      fail("unavailable: button is not configured");
       return;
     }
-    fail("unavailable: button sample is not implemented");
+    try {
+      reply_ok_bool(out, now_s, gpio_->read(cfg_.button_pin));
+    } catch (const std::exception& exc) {
+      fail(std::string("unavailable: ") + exc.what());
+    }
     return;
   }
 

@@ -47,6 +47,7 @@ int main() {
              defaults.right.stdby == 20,
          "default right BCM");
   expect(defaults.led.r == 22 && defaults.led.g == 23 && defaults.led.b == 24, "default LED BCM");
+  expect(defaults.button_pin == 27, "default button BCM");
   expect(!pwm_is_high(0.0, 600, 0.0) && pwm_is_high(0.0, 600, 1.0), "pwm endpoints");
   expect(pwm_is_high(0.0001, 600, 0.5) && !pwm_is_high(0.001, 600, 0.5), "pwm half period");
   {
@@ -56,6 +57,16 @@ int main() {
     expect(file.left.in1 == 19 && file.left.pwm == 26 && file.right.in1 == 5 && file.right.pwm == 12 &&
                file.left.stdby == 20 && file.right.stdby == 20 && file.led.r == 22 && file.led.b == 24,
            "example conf pins");
+    expect(file.button_pin == 27, "example conf button");
+  }
+  {
+    MemoryGpio buttons;
+    buttons.set_input_pull_down(27);
+    const GpioPin* pin = buttons.get(27);
+    expect(pin != nullptr && pin->input && pin->pull_down && !pin->driven, "button input pull-down");
+    expect(!buttons.read(27), "button released reads low");
+    buttons.inject(27, true);
+    expect(buttons.read(27), "button pressed reads high");
   }
 
   // Same BCM numbers, injected into the in-memory backend.

@@ -19,7 +19,8 @@ The locked plan is [docs/v2_os_plan.md](docs/v2_os_plan.md). Where this tree dis
 | `getId` / `getVirtualId` | Configured integers. Default **−1**, matching the unset id in `cocos_py2`. |
 | `sendStartTime` | Stored and logged. Not broadcast. |
 | `integrate` | Client-side Euler step. Not an op. Public cocos has no `integrate`. |
-| `isButtonPressed`, `getPoseCamera`, `isCharging`, `getDistanceTOF`, `getBatteryVoltage` | `err` starting with `unavailable`. No fake samples. Charging is not debounced because there is no contact signal. |
+| `isButtonPressed` | Implemented. Reads BCM 27 (`button_pin`, S1 on `bottom_board_v2.sch`, switch to 3.3V) as an input with the internal pull-down. `true` = pressed. `button_pin=-1` makes it `unavailable`. Not tested on the robot yet. |
+| `getPoseCamera`, `isCharging`, `getDistanceTOF`, `getBatteryVoltage` | `err` starting with `unavailable`. No fake samples. Charging is not debounced because there is no contact signal. |
 | User-code sandbox, watchdog, spawning `usr()` | **Not ported.** v1 spawned `python2 -m cocos_py2` from `ApiController`. Start the client yourself. |
 | ESP32 UART motors | **Not implemented.** Default build uses the Pi GPIO logic above. `-DCOACHBOT_MOTORS_ON_ESP32=ON` makes `setVel` return an error. No frame format. |
 
@@ -32,7 +33,7 @@ Confirmed on `bottom_board_v2.sch` nets into TB6612FNG `TB1`. These are the defa
 | left (A) | 19 | 16 | 26 | 20 |
 | right (B) | 5 | 6 | 12 | 20 |
 
-LED API, same order as v1: red 22, green 23, blue 24. On the schematic those nets land on connector SV1 pins 6, 5, and 4. The sheet does not label colors. GPIO22 is also switch S2. Motor PWM is 600 Hz. Both motors share STBY on BCM 20.
+LED API, same order as v1: red 22, green 23, blue 24. On the schematic those nets land on connector SV1 pins 6, 5, and 4. The sheet does not label colors. GPIO22 is also switch S2. The user button S1 is BCM 27 (active-high, internal pull-down). Motor PWM is 600 Hz. Both motors share STBY on BCM 20.
 
 `cocos2d` comes up with the drivers blocked (STBY low) until the first `setVel`. `setVel(0, 0)` coasts (STBY high, duty 0). It does not brake.
 

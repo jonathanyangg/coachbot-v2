@@ -108,6 +108,78 @@ void PiGpio::ensure_locked(int pin, int initial) {
   state.level = initial != 0;
 }
 
+void PiGpio::ensure_input_locked(int pin) {
+  Line& state = lines_[pin];
+  if (state.handle != nullptr) {
+    if (!state.input) {
+      throw std::runtime_error("BCM " + std::to_string(pin) + " is already an output");
+    }
+    return;
+  }
+#ifdef COCOS_GPIOD_V2
+  unsigned int offset = static_cast<unsigned>(pin);
+  gpiod_line_settings* settings = gpiod_line_settings_new();
+  gpiod_line_config* line_cfg = gpiod_line_config_new();
+  gpiod_request_config* req_cfg = gpiod_request_config_new();
+  if (settings == nullptr || line_cfg == nullptr || req_cfg == nullptr) {
+    gpiod_request_config_free(req_cfg);
+    gpiod_line_config_free(line_cfg);
+    gpiod_line_settings_free(settings);
+    throw std::runtime_error("libgpiod alloc failed");
+  }
+  int ready = gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_INPUT);
+  if (ready == 0) ready = gpiod_line_settings_set_bias(settings, GPIOD_LINE_BIAS_PULL_DOWN);
+  if (ready == 0) ready = gpiod_line_config_add_line_settings(line_cfg, &offset, 1, settings);
+  gpiod_request_config_set_consumer(req_cfg, "cocos2d");
+  gpiod_line_request* request = nullptr;
+  if (ready == 0) request = gpiod_chip_request_lines(chip_, req_cfg, line_cfg);
+  int saved = errno;
+  gpiod_request_config_free(req_cfg);
+  gpiod_line_config_free(line_cfg);
+  gpiod_line_settings_free(settings);
+  if (request == nullptr) {
+    throw std::runtime_error("gpiod_chip_request_lines input BCM " + std::to_string(pin) +
+                             " failed: " + std::strerror(saved));
+  }
+  state.handle = request;
+#else
+  auto* line = gpiod_chip_get_line(chip_, static_cast<unsigned>(pin));
+  if (line == nullptr) {
+    throw std::runtime_error("gpiod_chip_get_line BCM " + std::to_string(pin) + " failed");
+  }
+  // GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_DOWN needs libgpiod 1.5 or newer.
+  if (gpiod_line_request_input_flags(line, "cocos2d", GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_DOWN) < 0) {
+    throw std::runtime_error("gpiod_line_request_input BCM " + std::to_string(pin) +
+                             " failed: " + std::strerror(errno));
+  }
+  state.handle = line;
+#endif
+  state.input = true;
+}
+
+void PiGpio::set_input_pull_down(int pin) {
+  std::lock_guard<std::mutex> lock(mu_);
+  ensure_input_locked(pin);
+}
+
+bool PiGpio::read(int pin) {
+  std::lock_guard<std::mutex> lock(mu_);
+  ensure_input_locked(pin);
+  void* handle = lines_[pin].handle;
+#ifdef COCOS_GPIOD_V2
+  enum gpiod_line_value value = gpiod_line_request_get_value(
+      static_cast<gpiod_line_request*>(handle), static_cast<unsigned>(pin));
+  if (value == GPIOD_LINE_VALUE_ERROR) {
+    throw std::runtime_error("gpio get BCM " + std::to_string(pin) + " failed");
+  }
+  return value == GPIOD_LINE_VALUE_ACTIVE;
+#else
+  int value = gpiod_line_get_value(static_cast<gpiod_line*>(handle));
+  if (value < 0) throw std::runtime_error("gpio get BCM " + std::to_string(pin) + " failed");
+  return value == 1;
+#endif
+}
+
 void PiGpio::set_output(int pin) {
   std::lock_guard<std::mutex> lock(mu_);
   ensure_locked(pin, 0);

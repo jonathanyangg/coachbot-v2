@@ -28,6 +28,7 @@ Unknown ops (incl. v1 snake_case names) → `err: "unknown_op"`.
 - `setLed` `r`,`g`,`b`: integers in [0, 100]. Duty is `value/100` (percent). v1 Rust divided by 255; this OS does not.
 - `getPose`: `null` when no tracker sample exists. Shape when one exists is `{x, y, theta}`.
 - `getPoseCamera`: `{x, y, theta, t, conf}` when a camera exists. Until then, `err` begins with `unavailable`.
+- `isButtonPressed`: reads BCM `button_pin` (default 27, S1) with the internal pull-down. `true` = pressed (switch to 3.3V). `err` begins with `unavailable` when `button_pin=-1` or the line cannot be requested.
 - `sendMsg`: bytes, truncated to `msg_max_bytes` (default 64). `recvMsg` drains the local inbox as a list. No radio.
 - `getClock`: float seconds. `delay`: `ms` >= 0, and the handler does not sleep.
 - `getId` / `getVirtualId`: ints from config (default -1).

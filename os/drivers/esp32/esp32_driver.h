@@ -6,6 +6,5 @@
 // This header does not define UART bytes.
 
 void esp32_warn_stub();
-bool esp32_button_available();
 bool esp32_tof_available();
 bool esp32_battery_available();

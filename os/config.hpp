@@ -14,6 +14,9 @@ struct Config {
   MotorPins right{5, 6, 12, 20};
   // SV1 GPIO22/23/24, v1 LED order R/G/B. Schematic does not label colors.
   LedPins led{22, 23, 24};
+  // bottom_board_v2.sch S1 "User Interface Button": GPIO27 to 3.3V, no resistor.
+  // Active-high with the Pi's internal pull-down. -1 disables isButtonPressed.
+  int button_pin = 27;
   // auto: libgpiod when gpiochip exists, otherwise MemoryGpio. memory | pi.
   std::string gpio_backend = "auto";
   std::string gpiochip = "/dev/gpiochip0";

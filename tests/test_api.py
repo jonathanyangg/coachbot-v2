@@ -126,7 +126,9 @@ def test_ipc(binary):
             fail("sendStartTime")
         if bot.delay(0) is not None:
             fail("delay")
-        for method in ("getPoseCamera", "isButtonPressed", "isCharging", "getDistanceTOF", "getBatteryVoltage"):
+        if bot.isButtonPressed() is not False:
+            fail("button should read False (pull-down, in-memory GPIO)")
+        for method in ("getPoseCamera", "isCharging", "getDistanceTOF", "getBatteryVoltage"):
             try:
                 getattr(bot, method)()
                 fail(method + " should be unavailable")

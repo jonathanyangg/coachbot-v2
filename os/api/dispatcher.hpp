@@ -18,6 +18,7 @@ class Dispatcher {
   MotorController motors_;
   LedDriver led_;
   Inbox inbox_;
+  bool button_ready_ = false;
   double start_time_ = 0;
   bool has_start_ = false;
 };

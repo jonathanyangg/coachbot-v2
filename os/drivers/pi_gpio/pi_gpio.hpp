@@ -25,18 +25,22 @@ class PiGpio : public Gpio {
   void set_output(int pin) override;
   void write(int pin, bool high) override;
   void set_pwm(int pin, double hz, double duty) override;
+  void set_input_pull_down(int pin) override;
+  bool read(int pin) override;
 
  private:
   struct Line {
     // gpiod_line* on 1.x, gpiod_line_request* on 2.x.
     void* handle = nullptr;
     bool pwm = false;
+    bool input = false;
     double hz = 0;
     double duty = 0;
     bool level = false;
   };
 
   void ensure_locked(int pin, int initial);
+  void ensure_input_locked(int pin);
   void run();
 
   gpiod_chip* chip_ = nullptr;

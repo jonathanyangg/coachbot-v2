@@ -28,6 +28,17 @@ inline void reply_ok_nil(msgpack::sbuffer& out, double t) {
   pk.pack(t);
 }
 
+inline void reply_ok_bool(msgpack::sbuffer& out, double t, bool value) {
+  msgpack::packer<msgpack::sbuffer> pk(&out);
+  pk.pack_map(3);
+  pk.pack(std::string("ok"));
+  pk.pack(true);
+  pk.pack(std::string("val"));
+  pk.pack(value);
+  pk.pack(std::string("t"));
+  pk.pack(t);
+}
+
 inline void reply_ok_int(msgpack::sbuffer& out, double t, int value) {
   msgpack::packer<msgpack::sbuffer> pk(&out);
   pk.pack_map(3);
